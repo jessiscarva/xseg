@@ -1,32 +1,30 @@
 import streamlit as st
 import pandas as pd
+import plotly.graph_objs as go
+import calendar
+import streamlit_authenticator as stauth
 
-#Planiha padrão para o usuario baixar
-def download_template():
-    template_url = 'https://github.com/jessiscarva/xseg/raw/main/historico%20de%20consumo.xlsx'
-    df = pd.read_excel(template_url)
-    df.to_excel('historico de consumo.xlsx', index=False)
-    st.success('A planilha padrão foi baixada com sucesso!')
+#módulo Hasher para converter suas senhas de texto sem formatação em senhas hash
+hashed_passwords = stauth.Hasher(['abc', 'def']).generate()
 
+#Criar objeto autenticador
+authenticator = Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days'],
+    config['preauthorized']
+)
 
-#Função para fazer o upload da planilha preenchida
-def upload_data():
-    uploaded_file = st.file_uploader("Selecione a planilha preenchida:", type=['xlsx'])
-    if uploaded_file is not None:
-        df = pd.read_excel(uploaded_file)
-        df.to_excel('uploads/dados.xlsx', index=False)
-        st.success('A planilha preenchida foi enviada com sucesso!')
+#Renderizar o widget de login fornecendo um nome para o formulário e sua localização ( ou seja, barra lateral ou principal )
+name, authentication_status, username = authenticator.login('Login', 'main')
 
-#Criar botoões no Streamlit
-def main():
-    st.title('Upload e Download de Planilhas')
-    st.write('Baixe a planilha padrão e preencha os dados. Em seguida, faça o upload da planilha preenchida para análise dos dados.')
-
-    if st.button('Baixar Planilha Padrão'):
-        download_template()
-
-    if st.button('Enviar Planilha Preenchida'):
-        upload_data()
-
-if __name__ == '__main__':
-    main()
+#Checar o status da autenticação
+if authentication_status:
+    authenticator.logout('Logout', 'main')
+    st.write(f'Welcome *{name}*')
+    st.title('Some content')
+elif authentication_status == False:
+    st.error('Usuario ou senha incorreta')
+elif authentication_status == None:
+    st.warning('Faça login com o seu username e senha')
